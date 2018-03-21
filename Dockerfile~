@@ -1,0 +1,27 @@
+FROM debian:jessie
+MAINTAINER Odoo S.A. <info@odoo.com>
+
+ENV ODOO_VERSION 9.0
+ENV ODOO_RELEASE 20180122
+
+
+# Set the default config file
+ENV OPENERP_SERVER /etc/odoo/openerp-server.conf
+
+ADD ./installer.sh /
+
+# Install some deps, lessc and less-plugin-clean-css, and wkhtmltopdf
+RUN ./installer.sh
+
+# Copy entrypoint script and Odoo configuration file
+ADD ./entrypoint.sh /
+ADD  /etc/odoo/
+RUN chown odoo /etc/odoo/openerp-server.conf
+
+# Mount /var/lib/odoo to allow restoring filestore and /mnt/extra-addons for users addons
+RUN mkdir -p /mnt/extra-addons \
+        && chown -R odoo /mnt/extra-addons
+VOLUME ["/var/lib/odoo", "/mnt/extra-addons"]
+
+ENTRYPOINT ["/entrypoint.sh"]
+CMD ["openerp-server"]
